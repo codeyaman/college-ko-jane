@@ -8,7 +8,7 @@
   </p>
 
   <p>
-    <a href="https://collage-ko-jano.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-ollage-ko-jano.vercel.app-F59E0B?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+    <a href="https://collage-ko-jano.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-collage-ko-jano.vercel.app-F59E0B?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
     <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js" />
     <img src="https://img.shields.io/badge/MangoDB-Atlas-4169E1?style=for-the-badge&logo=mangodbatlas" alt="MangoDB-Atlas" />
     <img src="https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS" />
