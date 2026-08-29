@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { db } from "@/db";
 import { Conversation, Message } from "@/db/schema";
 import { getSessionUser } from "@/lib/auth";
@@ -14,7 +15,7 @@ export async function GET() {
   await db();
 
   const convos = await Conversation.aggregate([
-    { $match: { userId: user.id } },
+    { $match: { userId: new mongoose.Types.ObjectId(user.id) } },
     { $sort: { updatedAt: -1 } },
     { $limit: 100 },
     {

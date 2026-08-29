@@ -9,6 +9,13 @@ export default function GlobalLoader({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Skip loader if already seen in this session
+    if (sessionStorage.getItem("hasSeenLoader")) {
+      setLoading(false);
+      setProgress(100);
+      return;
+    }
+
     // Prevent scrolling while loading
     document.body.style.overflow = "hidden";
 
@@ -23,6 +30,7 @@ export default function GlobalLoader({ children }: { children: ReactNode }) {
           setTimeout(() => {
             setLoading(false);
             document.body.style.overflow = "";
+            sessionStorage.setItem("hasSeenLoader", "true");
           }, 300); // Wait a tiny bit at 100%
           return 100;
         }
