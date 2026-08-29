@@ -1,0 +1,371 @@
+@import "tailwindcss";
+
+/* ========================================================================
+   Theme architecture
+   Every color utility (bg-ink-950, text-cream-50, text-saffron-300, …) is
+   emitted as a reference to a CSS custom property (--c-*). The dark theme
+   defines those vars on :root/html.dark; html.light remaps the entire ramp
+   — so the whole app switches theme by flipping one class on <html>.
+   ======================================================================== */
+
+@theme inline {
+  /* surface + neutral ramp (ink) and foreground ramp (cream) */
+  --color-ink-950: var(--c-950);
+  --color-ink-900: var(--c-900);
+  --color-ink-850: var(--c-850);
+  --color-ink-800: var(--c-800);
+  --color-ink-700: var(--c-700);
+  --color-ink-600: var(--c-600);
+  --color-ink-500: var(--c-500);
+  --color-ink-400: var(--c-400);
+  --color-ink-300: var(--c-300);
+  --color-ink-200: var(--c-200);
+
+  --color-cream-50: var(--c-fg50);
+  --color-cream-100: var(--c-fg100);
+  --color-cream-300: var(--c-fg300);
+
+  /* brand accent */
+  --color-saffron-200: var(--c-sf200);
+  --color-saffron-300: var(--c-sf300);
+  --color-saffron-400: var(--c-sf400);
+  --color-saffron-500: var(--c-sf500);
+  --color-saffron-600: var(--c-sf600);
+  --color-saffron-700: var(--c-sf700);
+
+  /* semantic + admin pill palettes */
+  --color-leaf-400: var(--c-leaf400);
+  --color-leaf-500: var(--c-leaf500);
+  --color-rose-400: var(--c-rose400);
+  --color-rose-300: var(--c-rose300);
+  --color-sky-400: var(--c-sky400);
+  --color-sky-300: var(--c-sky300);
+  --color-fuchsia-400: var(--c-fuch400);
+  --color-fuchsia-300: var(--c-fuch300);
+  --color-amber-300: var(--c-amb300);
+  --color-amber-200: var(--c-amb200);
+  --color-teal-300: var(--c-teal300);
+}
+
+@theme {
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, -apple-system,
+    sans-serif;
+  --font-hindi: var(--font-hindi-var), Georgia, serif;
+
+  --animate-marquee: marquee 44s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-delayed: float 9s ease-in-out 1.4s infinite;
+  --animate-spin-slower: spin 26s linear infinite;
+  --animate-pulse-soft: pulse-soft 2.4s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-14px);
+    }
+  }
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+}
+
+/* ------------------------------ dark (default) ----------------------------- */
+
+:root,
+html.dark {
+  color-scheme: dark;
+
+  --c-950: #0a0907;
+  --c-900: #12100c;
+  --c-850: #171410;
+  --c-800: #1d1913;
+  --c-700: #2a251c;
+  --c-600: #3d362a;
+  --c-500: #5a5245;
+  --c-400: #8d8375;
+  --c-300: #b0a794;
+  --c-200: #d3cab8;
+
+  --c-fg50: #faf5ea;
+  --c-fg100: #f3ecdb;
+  --c-fg300: #e5dcc4;
+
+  --c-sf200: #ffd9ab;
+  --c-sf300: #ffc078;
+  --c-sf400: #ffa14d;
+  --c-sf500: #ff7a1a;
+  --c-sf600: #e85d04;
+  --c-sf700: #c24e02;
+
+  --c-leaf400: #6fc97b;
+  --c-leaf500: #43a047;
+  --c-rose400: #f27474;
+  --c-rose300: #fda4af;
+  --c-sky400: #38bdf8;
+  --c-sky300: #7dd3fc;
+  --c-fuch400: #e879f9;
+  --c-fuch300: #f0abfc;
+  --c-amb300: #fcd34d;
+  --c-amb200: #fde68a;
+  --c-teal300: #5eead4;
+}
+
+/* --------------------------------- light ---------------------------------- */
+
+html.light {
+  color-scheme: light;
+
+  /* inverted warm ramp — mirrors the dark theme's depth structure */
+  --c-950: #faf7f0; /* page background */
+  --c-900: #f3efe3; /* raised cards */
+  --c-850: #ede8d9;
+  --c-800: #e3dcc8; /* borders, hovers */
+  --c-700: #d5cbae; /* stronger borders */
+  --c-600: #b9ad8f; /* input borders */
+  --c-500: #9c8f76; /* placeholders */
+  --c-400: #7a6f5c; /* muted text */
+  --c-300: #5a5140; /* secondary text */
+  --c-200: #353026; /* high-contrast soft text */
+
+  --c-fg50: #17130c; /* primary text */
+  --c-fg100: #26211a;
+  --c-fg300: #4d4636;
+
+  /* accent darkened to stay readable on light surfaces */
+  --c-sf200: #9a3412;
+  --c-sf300: #c2410c;
+  --c-sf400: #ea580c;
+  --c-sf500: #f97316;
+  --c-sf600: #e85d04;
+  --c-sf700: #b45309;
+
+  --c-leaf400: #15803d;
+  --c-leaf500: #166534;
+  --c-rose400: #dc2626;
+  --c-rose300: #e11d48;
+  --c-sky400: #0284c7;
+  --c-sky300: #075985;
+  --c-fuch400: #a21caf;
+  --c-fuch300: #86198f;
+  --c-amb300: #d97706;
+  --c-amb200: #b45309;
+  --c-teal300: #0f766e;
+}
+
+/* ------------------------------ base + helpers ----------------------------- */
+
+::selection {
+  background: rgba(255, 122, 26, 0.35);
+  color: var(--c-fg50);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* GPU-accelerate all interactive hover targets for instant response */
+a, button, [role="button"] {
+  will-change: transform;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Sections with grain texture rendered on GPU layer */
+.grain {
+  transform: translateZ(0);
+}
+
+/* smooth full-app color sweep only during an active theme switch */
+html.theme-anim body *:not(script):not(style),
+html.theme-anim body *:not(script):not(style)::before,
+html.theme-anim body *:not(script):not(style)::after {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.25s ease !important;
+}
+
+.text-gradient {
+  background: linear-gradient(
+    100deg,
+    #ffc078 0%,
+    #ff9a3d 35%,
+    #ff7a1a 60%,
+    #e85d04 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+html.light .text-gradient {
+  background: linear-gradient(100deg, #f59e0b 0%, #ea580c 45%, #c2410c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-600) transparent;
+}
+.scroll-slim::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: var(--c-600);
+  border-radius: 999px;
+}
+.scroll-slim::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mask-fade-x {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    black 12%,
+    black 88%,
+    transparent
+  );
+}
+
+.mask-fade-b {
+  mask-image: linear-gradient(to bottom, black 60%, transparent);
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    100deg,
+    var(--c-400) 35%,
+    var(--c-sf300) 50%,
+    var(--c-400) 65%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 2.2s linear infinite;
+}
+
+.ring-field {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.ring-field:focus-within {
+  border-color: rgba(255, 154, 61, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(255, 154, 61, 0.35),
+    0 0 34px -8px rgba(255, 122, 26, 0.35);
+}
+
+.typing-dot {
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* ------------------------------ theme toggle ------------------------------- */
+/* Bulb appearance is pure CSS driven by html.light / html.dark — zero
+   hydration mismatch, works before React boots. */
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.25rem;
+  width: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-700);
+  background: color-mix(in oklab, var(--c-900) 70%, transparent);
+  transition:
+    border-color 0.25s ease,
+    transform 0.25s ease;
+  cursor: pointer;
+}
+.theme-toggle:hover {
+  border-color: rgba(255, 154, 61, 0.55);
+  transform: translateY(-1px);
+}
+.theme-toggle .lucide {
+  height: 1.1rem;
+  width: 1.1rem;
+  transition: all 0.3s ease;
+}
+html.dark .theme-toggle .lucide {
+  color: var(--c-sf300);
+  fill: rgba(255, 192, 120, 0.22);
+  filter: drop-shadow(0 0 7px rgba(255, 176, 120, 0.75));
+}
+html.light .theme-toggle .lucide {
+  color: var(--c-500);
+  fill: none;
+  filter: none;
+}
+html.light .theme-toggle {
+  background: var(--c-900);
+}
+html.light .theme-toggle:hover .lucide {
+  color: var(--c-sf400);
+}
