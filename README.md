@@ -8,9 +8,9 @@
   </p>
 
   <p>
-    <a href="https://collage-ko-jano.vercel.app/"><img src="https://img.shields.io/badge/Live_Demo-collage-ko-jano.vercel.app-F59E0B?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
+    <a href="https://collage-ko-jano.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-collage--ko--jano.vercel.app-F59E0B?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
     <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js" />
-    <img src="https://img.shields.io/badge/MangoDB-Atlas-4169E1?style=for-the-badge&logo=mangodbatlas" alt="MangoDB-Atlas" />
+    <img src="https://img.shields.io/badge/MongoDB_Atlas-47A248?style=for-the-badge&logo=mongodb" alt="MongoDB Atlas" />
     <img src="https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS" />
   </p>
 
@@ -25,7 +25,7 @@
 - 📚 **Dynamic RAG Pipeline** — Retrieve → Hybrid Re-Rank → Confidence Gate → Grounded Generate.
 - 🔐 **Secure Role-based Auth** — Seamless Firebase Authentication integrated securely via Server-Side Admin SDK.
 - 🗂️ **Knowledge Studio (Admin)** — Drag-and-drop file upload, automatic text extraction, overlap-aware chunking, and instant TF-IDF embedding.
-- 🔍 **In-DB Vector Search** — Top-K cosine similarity ranking executed entirely inside PostgreSQL via custom `dot_product()` functions.
+- 🔍 **In-DB Vector Search** — Top-K cosine similarity ranking executed entirely inside MongoDB Atlas Vector Search.
 - 🚀 **Lightning Fast** — Built on Next.js App Router and optimized for maximum speed and SEO.
 
 ## 🛠 Tech Stack
@@ -34,8 +34,8 @@
 | --- | --- |
 | **Frontend** | Next.js (App Router), React 19, Tailwind CSS v4, Framer Motion, Lucide Icons |
 | **Backend** | Next.js Route Handlers (Node.js runtime) |
-| **Database** | PostgreSQL 15, Drizzle ORM |
-| **Vector Engine** | PostgreSQL-native `real[]` column with in-DB `dot_product()` |
+| **Database** | MongoDB Atlas, Drizzle ORM |
+| **Vector Engine** | MongoDB Atlas Vector Search |
 | **Embeddings** | Deterministic local TF-IDF feature hashing (1024-dim) |
 | **Authentication** | Firebase Client & Admin SDK, Secure HTTP-only Sessions |
 
@@ -45,7 +45,7 @@ Want to run **College Ko Jano** locally? It only takes a few minutes!
 
 ### Prerequisites
 - Node.js (v18+)
-- PostgreSQL Database (e.g., Supabase, Neon)
+- MongoDB Atlas Database
 - Firebase Project
 
 ### 1. Clone the repository
@@ -63,7 +63,7 @@ npm install
 Create a `.env` file in the root directory and add the following keys:
 ```env
 # Database
-DATABASE_URL="postgres://user:password@host:port/db"
+DATABASE_URL="mongodb+srv://user:password@cluster.mongodb.net/db"
 
 # Firebase Client
 NEXT_PUBLIC_FIREBASE_API_KEY="your-api-key"
@@ -102,7 +102,7 @@ The core of College Ko Jano is its blazing fast RAG (Retrieval-Augmented Generat
 ```mermaid
 graph LR
     Q[User Question] --> E[Embed Vector]
-    E --> DB[(Postgres Vector Search)]
+    E --> DB[(MongoDB Vector Search)]
     DB --> R[Hybrid Re-ranker]
     R --> G{Confidence Gate}
     G -- High Confidence --> Gen[Grounded Generation]
