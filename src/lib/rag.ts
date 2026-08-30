@@ -50,11 +50,15 @@ export async function answerQuestion(
   options?: { category?: string }
 ): Promise<RagResult> {
   const idf = await getIdfLookup();
-  const queryEmbedding = embed(question, idf);
+  
+  // Query Expansion: Prepend the category to force the vector search to rank these chunks higher
+  const searchQuestion = options?.category ? `${options.category} ${question}` : question;
+  const queryEmbedding = embed(searchQuestion, idf);
 
   // 1. Vector search → 2. hybrid re-rank (cosine + IDF term-overlap).
+  // We pass searchQuestion to rankChunks so IDF term-overlap also considers the category terms.
   const retrieved = await searchChunks(queryEmbedding, 16, options?.category);
-  const ranked = rankChunks(question, retrieved, idf);
+  const ranked = rankChunks(searchQuestion, retrieved, idf);
   const top = ranked[0];
 
   // 3. Unknown-question gate: the question must clear BOTH the hybrid score

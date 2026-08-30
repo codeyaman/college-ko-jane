@@ -64,7 +64,8 @@ export async function searchChunks(
   // We use MongoDB Atlas $vectorSearch to find the top K chunks.
   // Note: We cannot easily filter by document status="ready" natively inside
   // $vectorSearch without indexing the filter field in the Atlas Search index,
-  // so we'll fetch a slightly larger pool and filter it after joining.
+  // We'll fetch a slightly larger pool and filter it after joining.
+  const fetchLimit = category ? k * 6 : k * 3;
   
   const pipeline = [
     {
@@ -72,8 +73,8 @@ export async function searchChunks(
         index: "vector_index", // Name of the Atlas Vector Search Index
         path: "embedding",
         queryVector: queryEmbedding,
-        numCandidates: k * 10,
-        limit: k * 3,
+        numCandidates: fetchLimit * 3,
+        limit: fetchLimit,
       }
     },
     {
