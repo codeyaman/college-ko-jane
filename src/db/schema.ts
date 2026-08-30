@@ -128,6 +128,7 @@ export interface IMessage extends Document {
   content: string;
   sources?: IMessageSource[];
   confidence?: number;
+  feedback?: 1 | -1;
   createdAt: Date;
 }
 const messageSchema = new Schema<IMessage>({
@@ -136,6 +137,7 @@ const messageSchema = new Schema<IMessage>({
   content: { type: String, required: true },
   sources: { type: Schema.Types.Mixed },
   confidence: { type: Number },
+  feedback: { type: Number, enum: [1, -1] },
   createdAt: { type: Date, default: Date.now },
 });
 export const Message = mongoose.models.Message || mongoose.model<IMessage>("Message", messageSchema);

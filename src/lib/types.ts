@@ -14,6 +14,7 @@ export interface ChatMessageVM {
   content: string;
   sources?: SourceRef[] | null;
   confidence?: number | null;
+  feedback?: 1 | -1 | null;
   pending?: boolean;
   unknown?: boolean;
   errorText?: string;

@@ -27,6 +27,8 @@ import {
   Trash2,
   TriangleAlert,
   X,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { auth as firebaseAuth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
@@ -99,32 +101,29 @@ function ThinkingBubble() {
   );
 }
 
-function SourceChips({ sources }: { sources: SourceRef[] }) {
-  return (
-    <div className="mt-4 border-t border-ink-700/60 pt-3">
-      <p className="mb-2 text-[10px] font-medium tracking-[0.2em] text-ink-500 uppercase">
-        Sources
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {sources.map((s, i) => (
-          <span
-            key={`${s.documentId}-${i}`}
-            className="flex items-center gap-1.5 rounded-full border border-saffron-500/25 bg-saffron-500/10 px-3 py-1.5 text-[11px] text-saffron-300"
-          >
-            <BookOpenText className="h-3 w-3" />
-            {s.title}
-            <span className="text-saffron-500/80">
-              {Math.round(s.score * 100)}%
-            </span>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function AssistantMessage({ msg }: { msg: ChatMessageVM }) {
   const conf = confidenceMeta(msg.confidence);
+  const [feedback, setFeedback] = useState<1 | -1 | null>(msg.feedback ?? null);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleFeedback(val: 1 | -1) {
+    if (submitting || msg.pending) return;
+    const newVal = feedback === val ? null : val;
+    setFeedback(newVal);
+    setSubmitting(true);
+    try {
+      await fetch(`/api/messages/${msg.id}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ feedback: newVal }),
+      });
+    } catch {
+      setFeedback(feedback); // revert on error
+    } finally {
+      setSubmitting(false);
+    }
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -173,7 +172,56 @@ function AssistantMessage({ msg }: { msg: ChatMessageVM }) {
           )}
         </div>
         {msg.sources && msg.sources.length > 0 && !msg.pending && (
-          <SourceChips sources={msg.sources} />
+          <div className="flex items-end justify-between gap-4 mt-4 border-t border-ink-700/60 pt-3">
+            <div className="flex-1">
+              <p className="mb-2 text-[10px] font-medium tracking-[0.2em] text-ink-500 uppercase">
+                Sources
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {msg.sources.map((s, i) => (
+                  <span
+                    key={`${s.documentId}-${i}`}
+                    className="flex items-center gap-1.5 rounded-full border border-saffron-500/25 bg-saffron-500/10 px-3 py-1.5 text-[11px] text-saffron-300"
+                  >
+                    <BookOpenText className="h-3 w-3" />
+                    {s.title}
+                    <span className="text-saffron-500/80">
+                      {Math.round(s.score * 100)}%
+                    </span>
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            {!msg.unknown && (
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  onClick={() => handleFeedback(1)}
+                  disabled={submitting}
+                  aria-label="Helpful"
+                  className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
+                    feedback === 1
+                      ? "bg-leaf-500/20 text-leaf-400"
+                      : "text-ink-500 hover:bg-ink-800 hover:text-leaf-400"
+                  }`}
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => handleFeedback(-1)}
+                  disabled={submitting}
+                  aria-label="Not helpful"
+                  className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
+                    feedback === -1
+                      ? "bg-rose-500/20 text-rose-400"
+                      : "text-ink-500 hover:bg-ink-800 hover:text-rose-400"
+                  }`}
+                >
+                  <ThumbsDown className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </motion.div>
@@ -472,6 +520,7 @@ export default function ChatApp({
           content: string;
           sources: SourceRef[] | null;
           confidence: number | null;
+          feedback?: 1 | -1 | null;
         }[];
       };
       setMessages(
@@ -481,6 +530,7 @@ export default function ChatApp({
           content: m.content,
           sources: m.sources,
           confidence: m.confidence,
+          feedback: m.feedback,
           unknown:
             m.role === "assistant" &&
             m.content.startsWith("I searched the college knowledge base"),
