@@ -7,6 +7,12 @@ export async function PUT(request: Request) {
   if (!user) {
     return Response.json({ error: "Please sign in." }, { status: 401 });
   }
+  if (user.email === "demo@college.edu") {
+    return Response.json(
+      { error: "Action not allowed in Demo Mode." },
+      { status: 403 },
+    );
+  }
 
   let body: unknown;
   try {

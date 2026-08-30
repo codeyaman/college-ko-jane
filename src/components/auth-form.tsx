@@ -141,6 +141,23 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
     }
   }
 
+  async function onDemoAdmin() {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/demo", { method: "POST" });
+      if (res.ok) {
+        router.replace("/admin");
+        router.refresh();
+      } else {
+        setError("Demo login failed.");
+        setBusy(false);
+      }
+    } catch {
+      setError("Demo login failed.");
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="grain relative flex h-[100dvh] overflow-hidden bg-ink-950 text-cream-50">
       {/* ambient */}
@@ -418,6 +435,17 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
               </>
             )}
           </p>
+          
+          <div className="mt-8 flex justify-center">
+            <button
+              type="button"
+              onClick={onDemoAdmin}
+              disabled={busy}
+              className="inline-flex items-center gap-2 rounded-full border border-saffron-500/20 bg-saffron-500/10 px-4 py-2 text-xs font-medium text-saffron-400 transition hover:bg-saffron-500/20 hover:text-saffron-300 disabled:opacity-50"
+            >
+              Try Demo Admin
+            </button>
+          </div>
         </motion.div>
       </section>
     </main>

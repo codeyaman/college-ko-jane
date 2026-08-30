@@ -58,6 +58,12 @@ export async function POST(request: Request) {
       { status: 403 },
     );
   }
+  if (user.email === "demo@college.edu") {
+    return Response.json(
+      { error: "Action not allowed in Demo Mode." },
+      { status: 403 },
+    );
+  }
 
   let form: FormData;
   try {

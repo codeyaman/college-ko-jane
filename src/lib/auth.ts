@@ -40,6 +40,17 @@ export async function createSession(idToken: string): Promise<string> {
  */
 export async function getSessionUser(): Promise<(IUser & { id: string }) | null> {
   const store = await cookies();
+  const demoCookie = store.get("ckj_demo_admin")?.value;
+  if (demoCookie === "true") {
+    return {
+      id: "demo-admin-id",
+      name: "Demo Admin",
+      email: "demo@college.edu",
+      role: "admin",
+      createdAt: new Date(),
+    } as any;
+  }
+  
   const sessionCookie = store.get(SESSION_COOKIE)?.value;
   if (!sessionCookie) return null;
   
@@ -84,6 +95,7 @@ export async function destroySession(): Promise<void> {
   }
   
   store.delete(SESSION_COOKIE);
+  store.delete("ckj_demo_admin");
 }
 
 export function publicUser(user: any) {
