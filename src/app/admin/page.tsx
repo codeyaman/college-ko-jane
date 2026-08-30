@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { Doc, Chunk, User } from "@/db/schema";
+import { Doc, Chunk, User, Conversation, Message } from "@/db/schema";
 import { getSessionUser } from "@/lib/auth";
 import AdminApp from "@/components/admin/admin-app";
 
@@ -21,6 +21,11 @@ export default async function AdminPage() {
   const chunksCount = await Chunk.countDocuments();
   const usersCount = await User.countDocuments();
   const categoriesCount = (await Doc.distinct("category")).length;
+  
+  const conversationsCount = await Conversation.countDocuments();
+  const messagesCount = await Message.countDocuments();
+  const thumbsUpCount = await Message.countDocuments({ feedback: 1 });
+  const thumbsDownCount = await Message.countDocuments({ feedback: -1 });
 
   return (
     <AdminApp
@@ -30,6 +35,10 @@ export default async function AdminPage() {
         chunks: chunksCount,
         categories: categoriesCount,
         users: usersCount,
+        conversations: conversationsCount,
+        messages: messagesCount,
+        thumbsUp: thumbsUpCount,
+        thumbsDown: thumbsDownCount,
       }}
       initialDocs={docs.map((d) => ({
         id: d._id.toString(),

@@ -16,9 +16,12 @@ import {
   GraduationCap,
   Loader2,
   LogOut,
+  MessageSquare,
   Pencil,
   RefreshCw,
   Tags,
+  ThumbsDown,
+  ThumbsUp,
   Trash2,
   Users,
   X,
@@ -44,6 +47,10 @@ interface Stats {
   chunks: number;
   categories: number;
   users: number;
+  conversations: number;
+  messages: number;
+  thumbsUp: number;
+  thumbsDown: number;
 }
 
 const CATEGORIES = [
@@ -291,10 +298,14 @@ export default function AdminApp({
   };
 
   const statCards = [
+    { icon: Users, label: "Users", value: stats.users },
+    { icon: MessageSquare, label: "Conversations", value: stats.conversations },
+    { icon: FileText, label: "Messages", value: stats.messages },
+    { icon: ThumbsUp, label: "Positive Feedback", value: stats.thumbsUp },
+    { icon: ThumbsDown, label: "Negative Feedback", value: stats.thumbsDown },
     { icon: FolderOpen, label: "Documents", value: stats.docs },
     { icon: DatabaseZap, label: "Vector chunks", value: stats.chunks },
     { icon: Tags, label: "Categories", value: stats.categories },
-    { icon: Users, label: "Registered users", value: stats.users },
   ];
 
   return (
