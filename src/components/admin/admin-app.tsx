@@ -30,6 +30,7 @@ import { auth as firebaseAuth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
 import type { UserVM } from "@/lib/types";
 import ThemeToggle from "@/components/theme-toggle";
+import { CATEGORIES } from "@/lib/constants";
 
 interface DocRow {
   id: string;
@@ -52,22 +53,6 @@ interface Stats {
   thumbsUp: number;
   thumbsDown: number;
 }
-
-const CATEGORIES = [
-  "Admissions",
-  "Academics",
-  "Fees",
-  "Financial Aid",
-  "Exams",
-  "Hostel",
-  "Library",
-  "Placements",
-  "Student Life",
-  "Policies",
-  "Events",
-  "FAQ",
-  "Custom",
-];
 
 const UPLOAD_STEPS = [
   "Extracting text from file",

@@ -57,6 +57,7 @@ export function rankChunks(
 export async function searchChunks(
   queryEmbedding: number[],
   k = 6,
+  category?: string,
 ): Promise<RetrievedChunk[]> {
   await db();
 
@@ -88,7 +89,8 @@ export async function searchChunks(
     },
     {
       $match: {
-        "document.status": "ready"
+        "document.status": "ready",
+        ...(category ? { "document.category": category } : {})
       }
     },
     {

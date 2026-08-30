@@ -42,6 +42,7 @@ import type {
 } from "@/lib/types";
 import { Markdown } from "./markdown";
 import ThemeToggle from "@/components/theme-toggle";
+import { CATEGORIES } from "@/lib/constants";
 
 const DEFAULT_SUGGESTIONS = [
   "What is the B.Tech fee structure?",
@@ -257,6 +258,7 @@ export default function ChatApp({
   }, []);
   const [messages, setMessages] = useState<ChatMessageVM[]>([]);
   const [draft, setDraft] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [sending, setSending] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -412,6 +414,7 @@ export default function ChatApp({
         body: JSON.stringify({
           message: content,
           conversationId: activeId ?? undefined,
+          category: selectedCategory || undefined,
         }),
       });
       if (res.status === 401) {
@@ -869,6 +872,35 @@ export default function ChatApp({
 
         {/* composer */}
         <div className="shrink-0 border-t border-ink-800 bg-ink-950/90 px-4 py-3.5 backdrop-blur">
+          {/* Category selector */}
+          <div className="mx-auto max-w-3xl mb-3 flex flex-wrap gap-1.5 px-1">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("")}
+              className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
+                selectedCategory === ""
+                  ? "bg-ink-700 text-cream-50"
+                  : "bg-ink-800/50 text-ink-400 hover:bg-ink-800 hover:text-cream-100"
+              }`}
+            >
+              All Departments
+            </button>
+            {CATEGORIES.map((cat) => (
+              <button
+                type="button"
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
+                  selectedCategory === cat
+                    ? "bg-saffron-500/20 text-saffron-300"
+                    : "bg-ink-800/50 text-ink-400 hover:bg-ink-800 hover:text-cream-100"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
           <form
             onSubmit={onComposerSubmit}
             className="ring-field mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-ink-600 bg-ink-900 p-2"

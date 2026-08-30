@@ -47,12 +47,13 @@ async function knowledgeTitles(): Promise<string[]> {
 export async function answerQuestion(
   question: string,
   history: RagHistoryTurn[] = [],
+  options?: { category?: string }
 ): Promise<RagResult> {
   const idf = await getIdfLookup();
   const queryEmbedding = embed(question, idf);
 
   // 1. Vector search → 2. hybrid re-rank (cosine + IDF term-overlap).
-  const retrieved = await searchChunks(queryEmbedding, 16);
+  const retrieved = await searchChunks(queryEmbedding, 16, options?.category);
   const ranked = rankChunks(question, retrieved, idf);
   const top = ranked[0];
 
