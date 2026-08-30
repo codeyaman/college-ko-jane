@@ -15,6 +15,7 @@ import {
   BookOpenText,
   CircleAlert,
   Database,
+  Download,
   GraduationCap,
   Loader2,
   LogOut,
@@ -758,6 +759,21 @@ export default function ChatApp({
           <h1 className="min-w-0 flex-1 truncate text-sm font-medium text-cream-100">
             {activeTitle ?? "New conversation"}
           </h1>
+          
+          {activeId && (
+            <a
+              href={`/api/conversations/${activeId}/export`}
+              download
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center rounded-lg p-2 text-ink-300 transition hover:bg-ink-800 hover:text-saffron-300"
+              title="Export conversation"
+              aria-label="Export conversation"
+            >
+              <Download className="h-4.5 w-4.5" />
+            </a>
+          )}
+          
           <ThemeToggle />
 
           {user.role === "admin" && (
