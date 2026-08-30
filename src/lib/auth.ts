@@ -43,7 +43,7 @@ export async function getSessionUser(): Promise<(IUser & { id: string }) | null>
   const demoCookie = store.get("ckj_demo_admin")?.value;
   if (demoCookie === "true") {
     return {
-      id: "demo-admin-id",
+      id: "600000000000000000000000",
       name: "Demo Admin",
       email: "demo@college.edu",
       role: "admin",
