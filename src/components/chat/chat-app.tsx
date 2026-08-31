@@ -30,6 +30,10 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { auth as firebaseAuth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
@@ -104,12 +108,17 @@ function ThinkingBubble() {
 }
 
 
-function AssistantMessage({ msg }: { msg: ChatMessageVM }) {
+function AssistantMessage({ msg, speakMessage, speakingMsgId, handleFeedback }: { 
+  msg: ChatMessageVM, 
+  speakMessage: (id: string, text: string) => void,
+  speakingMsgId: string | null,
+  handleFeedback: (id: string, val: 1 | -1) => void
+}) {
   const conf = confidenceMeta(msg.confidence);
   const [feedback, setFeedback] = useState<1 | -1 | null>(msg.feedback ?? null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleFeedback(val: 1 | -1) {
+  async function onFeedback(val: 1 | -1) {
     if (submitting || msg.pending) return;
     const newVal = feedback === val ? null : val;
     setFeedback(newVal);
@@ -120,6 +129,7 @@ function AssistantMessage({ msg }: { msg: ChatMessageVM }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ feedback: newVal }),
       });
+      handleFeedback(msg.id, newVal ?? 0 as any);
     } catch {
       setFeedback(feedback); // revert on error
     } finally {
@@ -195,34 +205,52 @@ function AssistantMessage({ msg }: { msg: ChatMessageVM }) {
               </div>
             </div>
             
-            {!msg.unknown && (
-              <div className="flex shrink-0 items-center gap-1">
-                <button
-                  onClick={() => handleFeedback(1)}
-                  disabled={submitting}
-                  aria-label="Helpful"
-                  className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
-                    feedback === 1
-                      ? "bg-leaf-500/20 text-leaf-400"
-                      : "text-ink-500 hover:bg-ink-800 hover:text-leaf-400"
-                  }`}
-                >
-                  <ThumbsUp className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleFeedback(-1)}
-                  disabled={submitting}
-                  aria-label="Not helpful"
-                  className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
-                    feedback === -1
-                      ? "bg-rose-500/20 text-rose-400"
-                      : "text-ink-500 hover:bg-ink-800 hover:text-rose-400"
-                  }`}
-                >
-                  <ThumbsDown className="h-4 w-4" />
-                </button>
-              </div>
-            )}
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => speakMessage(msg.id, msg.content)}
+                className={`p-1.5 transition ${
+                  speakingMsgId === msg.id
+                    ? "text-saffron-400"
+                    : "text-ink-500 hover:text-saffron-300"
+                }`}
+                title={speakingMsgId === msg.id ? "Stop reading" : "Read aloud"}
+              >
+                {speakingMsgId === msg.id ? (
+                  <VolumeX className="h-4 w-4" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+              </button>
+              {!msg.unknown && (
+                <>
+                  <button
+                    onClick={() => onFeedback(1)}
+                    disabled={submitting}
+                    aria-label="Helpful"
+                    className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
+                      feedback === 1
+                        ? "bg-leaf-500/20 text-leaf-400"
+                        : "text-ink-500 hover:bg-ink-800 hover:text-leaf-400"
+                    }`}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => onFeedback(-1)}
+                    disabled={submitting}
+                    aria-label="Not helpful"
+                    className={`flex h-8 w-8 items-center justify-center rounded-md transition ${
+                      feedback === -1
+                        ? "bg-rose-500/20 text-rose-400"
+                        : "text-ink-500 hover:bg-ink-800 hover:text-rose-400"
+                    }`}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -269,6 +297,11 @@ export default function ChatApp({
   const [editNameValue, setEditNameValue] = useState(user.name);
   const [isSavingName, setIsSavingName] = useState(false);
 
+  // Web Speech API states
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const streamCtl = useRef<{
@@ -280,6 +313,67 @@ export default function ChatApp({
       error?: string;
     };
   }>({ buffer: "", done: null });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+
+        recognitionRef.current.onstart = () => setIsListening(true);
+        recognitionRef.current.onend = () => setIsListening(false);
+        recognitionRef.current.onresult = (event: any) => {
+          let finalTranscript = "";
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+          if (finalTranscript) {
+            setDraft((prev) => (prev ? prev + " " + finalTranscript : finalTranscript));
+          }
+        };
+      }
+    }
+    
+    return () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  const toggleListen = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      if (!recognitionRef.current) {
+        alert("Your browser does not support voice input.");
+        return;
+      }
+      recognitionRef.current.start();
+    }
+  };
+
+  const speakMessage = (id: string, text: string) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      alert("Your browser does not support text-to-speech.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    if (speakingMsgId === id) {
+      setSpeakingMsgId(null);
+      return;
+    }
+    const cleanText = text.replace(/[*_#]/g, "").replace(/\[.*?\]\(.*?\)/g, "");
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.onend = () => setSpeakingMsgId(null);
+    utterance.onerror = () => setSpeakingMsgId(null);
+    setSpeakingMsgId(id);
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -862,7 +956,13 @@ export default function ChatApp({
                       </div>
                     </motion.div>
                   ) : (
-                    <AssistantMessage key={m.id} msg={m} />
+                    <AssistantMessage 
+                      key={m.id} 
+                      msg={m} 
+                      speakMessage={speakMessage} 
+                      speakingMsgId={speakingMsgId}
+                      handleFeedback={(id, val) => setMessages(prev => prev.map(m => m.id === id ? {...m, feedback: val} : m))}
+                    />
                   ),
                 )}
               </AnimatePresence>
@@ -903,7 +1003,7 @@ export default function ChatApp({
 
           <form
             onSubmit={onComposerSubmit}
-            className="ring-field mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-ink-600 bg-ink-900 p-2"
+            className="ring-field mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-ink-600 bg-ink-900 p-2 relative"
           >
             <textarea
               ref={inputRef}
@@ -923,13 +1023,29 @@ export default function ChatApp({
                 }
               }}
               placeholder="Ask about fees, hostels, placements, exams…"
-              className="scroll-slim max-h-40 flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-cream-50 outline-none placeholder:text-ink-500"
+              className="scroll-slim max-h-40 flex-1 resize-none bg-transparent px-3 py-2.5 text-sm text-cream-50 outline-none placeholder:text-ink-500 pr-12"
             />
             {draft.length > 1400 && (
               <span className="self-center pr-1 text-[10px] text-ink-500">
                 {draft.length}/2000
               </span>
             )}
+            <button
+              type="button"
+              onClick={toggleListen}
+              title="Voice Input"
+              className={`absolute right-[52px] top-1.5 flex h-[38px] w-[38px] items-center justify-center rounded-xl transition ${
+                isListening
+                  ? "text-saffron-400 bg-saffron-400/20 animate-pulse"
+                  : "text-ink-400 hover:text-cream-100 hover:bg-ink-800"
+              }`}
+            >
+              {isListening ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </button>
             <button
               type="submit"
               disabled={!draft.trim() || sending}
