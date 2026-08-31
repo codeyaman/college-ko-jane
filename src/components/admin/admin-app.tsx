@@ -38,7 +38,8 @@ interface DocRow {
   category: string;
   filename: string;
   chunkCount: number;
-  status: string;
+  status: "processing" | "ready" | "failed";
+  summary?: string;
   createdAt: string;
   size: number;
 }
@@ -604,15 +605,22 @@ export default function AdminApp({
                       <FileText className="h-4.5 w-4.5 text-saffron-400" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-medium text-cream-100">
-                          {d.title}
-                        </p>
-                        <span
-                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${pillClass(d.category)}`}
-                        >
-                          {d.category}
-                        </span>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-medium text-cream-100">
+                            {d.title}
+                          </p>
+                          <span
+                            className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${pillClass(d.category)}`}
+                          >
+                            {d.category}
+                          </span>
+                        </div>
+                        {d.summary && (
+                          <div className="text-xs text-ink-300 line-clamp-2 pr-8 leading-relaxed">
+                            {d.summary}
+                          </div>
+                        )}
                       </div>
                       <p className="mt-1 text-[11px] text-ink-500">
                         {d.filename} · {d.chunkCount} chunks · {fmtSize(d.size)} ·{" "}

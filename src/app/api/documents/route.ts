@@ -26,6 +26,7 @@ export async function GET() {
       filename: d.filename,
       mimeType: d.mimeType,
       chunkCount: d.chunkCount,
+      summary: d.summary,
       status: d.status,
       createdAt: d.createdAt,
       size: d.contentText.length,

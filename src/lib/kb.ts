@@ -5,6 +5,7 @@
  */
 
 import { db } from "@/db";
+import { generateDocumentSummary } from "./rag";
 import { Chunk, Doc, KbStats } from "@/db/schema";
 import { chunkText, normalizeText } from "./chunk";
 import { embed, termSetOf, type IdfLookup } from "./embed";
@@ -95,6 +96,13 @@ export async function ingestDocument(input: {
     throw new Error("Document produced no chunks.");
   }
 
+  let summary: string | undefined;
+  try {
+    summary = await generateDocumentSummary(content);
+  } catch (err) {
+    console.warn("Summary generation failed during ingestion:", err);
+  }
+
   const doc = await Doc.create({
     title: input.title,
     category: input.category,
@@ -102,6 +110,7 @@ export async function ingestDocument(input: {
     mimeType: input.mimeType,
     contentText: content,
     chunkCount: parts.length,
+    summary,
     status: "ready",
     uploadedBy: input.uploadedBy || null,
   });

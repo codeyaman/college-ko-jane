@@ -212,3 +212,57 @@ async function askOpenAiLike(
   if (!content) throw new Error("Empty response");
   return content;
 }
+
+export async function generateDocumentSummary(text: string): Promise<string | undefined> {
+  const prompt = "Please generate a very concise, 1-2 sentence summary of the following document text. Do not include any formatting, bullet points, or introductory phrases like 'This document is about'. Just output the summary directly.\n\n" + text.slice(0, 3000);
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (openRouterKey) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openRouterKey}`,
+        },
+        body: JSON.stringify({
+          model: process.env.OPENROUTER_MODEL ?? "google/gemini-2.0-flash-exp:free",
+          temperature: 0.2,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        if (content) return content;
+      }
+    } catch (err) {
+      console.warn("[Summarizer] OpenRouter failed, falling back to Gemini.", err);
+    }
+  }
+
+  if (geminiKey) {
+    try {
+      const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (text) return text;
+      }
+    } catch (err) {
+      console.warn("[Summarizer] Gemini failed.", err);
+    }
+  }
+
+  return undefined;
+}
