@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Please sign in to chat." }, { status: 401 });
   }
 
-  let body: { message?: string; conversationId?: string; category?: string };
+  let body: { message?: string; conversationId?: string; category?: string; language?: string };
   try {
     body = await request.json();
   } catch {
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
   // Run the RAG pipeline — never leak a raw 500 to the student.
   let result: RagResult;
   try {
-    result = await answerQuestion(message, history, { category: body.category });
+    result = await answerQuestion(message, history, { category: body.category, language: body.language });
   } catch (err) {
     console.error("RAG pipeline failure:", err);
     result = {

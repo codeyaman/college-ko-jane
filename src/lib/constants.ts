@@ -6,3 +6,12 @@ export const CATEGORIES = [
   "Events",
   "Other",
 ];
+
+export const LANGUAGES = [
+  "English",
+  "Hindi",
+  "Marathi",
+  "Bengali",
+  "Spanish",
+  "French",
+];

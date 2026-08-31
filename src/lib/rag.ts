@@ -47,7 +47,7 @@ async function knowledgeTitles(): Promise<string[]> {
 export async function answerQuestion(
   question: string,
   history: RagHistoryTurn[] = [],
-  options?: { category?: string }
+  options?: { category?: string; language?: string }
 ): Promise<RagResult> {
   const idf = await getIdfLookup();
   
@@ -77,7 +77,7 @@ export async function answerQuestion(
     .filter((c) => c.final >= CONTEXT_MIN && c.overlap > 0)
     .slice(0, 8);
 
-  const answer = await generateAnswerFallback(question, context, history);
+  const answer = await generateAnswerFallback(question, context, history, options?.language);
 
   return {
     answer,
@@ -92,6 +92,7 @@ async function generateAnswerFallback(
   question: string,
   context: RetrievedChunk[],
   history: RagHistoryTurn[],
+  language?: string,
 ): Promise<string> {
   const contextBlock = context
     .map((c, i) => `[Source ${i + 1}] ${c.title} (${c.category})\n${c.content}`)
@@ -101,7 +102,7 @@ async function generateAnswerFallback(
   if (process.env.GEMINI_API_KEY) {
     providers.push({
       name: "Gemini",
-      fn: () => askGemini(question, contextBlock, history),
+      fn: () => askGemini(question, contextBlock, history, language),
     });
   }
   if (process.env.OPENAI_API_KEY) {
@@ -115,6 +116,7 @@ async function generateAnswerFallback(
           "https://api.openai.com/v1/chat/completions",
           process.env.OPENAI_API_KEY!,
           process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+          language,
         ),
     });
   }
@@ -129,6 +131,7 @@ async function generateAnswerFallback(
           "https://openrouter.ai/api/v1/chat/completions",
           process.env.OPENROUTER_API_KEY!,
           process.env.OPENROUTER_MODEL ?? "google/gemini-flash-1.5",
+          language,
         ),
     });
   }
@@ -150,11 +153,12 @@ async function askGemini(
   question: string,
   contextBlock: string,
   history: RagHistoryTurn[],
+  language: string = "English",
 ): Promise<string> {
   const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-  const system = `You are a professional, highly organized AI assistant.\nYour goal is to summarize and explain the information provided in the CONTEXT below in a very clear, structured, and professional manner.\nCRITICAL FORMATTING RULES:\n- Use Markdown bullet points (-) whenever listing multiple items, features, or steps.\n- Use **bold text** to highlight key terms, headings, or important concepts (e.g., **Methodology:**, **Scope:**).\n- Keep it highly readable and visually broken up.\nAnswer ONLY using the CONTEXT below, which is automatically retrieved from the uploaded documents.\nIf the context does not contain the answer, politely state that the information is not available in the database — never invent facts, numbers, or dates.\nDO NOT include any inline citations or source references in your text (e.g., do not write "(Source: SDD)"). The sources are already displayed separately in the UI.\n\nCONTEXT:\n${contextBlock}`;
+  const system = `You are a professional, highly organized AI assistant.\nYour goal is to summarize and explain the information provided in the CONTEXT below in a very clear, structured, and professional manner.\nCRITICAL FORMATTING RULES:\n- Use Markdown bullet points (-) whenever listing multiple items, features, or steps.\n- Use **bold text** to highlight key terms, headings, or important concepts.\n- Keep it highly readable and visually broken up.\n- **YOU MUST ANSWER THE USER IN THE ${language.toUpperCase()} LANGUAGE, REGARDLESS OF THE LANGUAGE OF THE CONTEXT!**\nAnswer ONLY using the CONTEXT below, which is automatically retrieved from the uploaded documents.\nIf the context does not contain the answer, politely state that the information is not available in the database — never invent facts, numbers, or dates.\nDO NOT include any inline citations or source references in your text.\n\nCONTEXT:\n${contextBlock}`;
 
   const contents = [
     { role: "user", parts: [{ text: system }] },
@@ -187,8 +191,9 @@ async function askOpenAiLike(
   url: string,
   key: string,
   model: string,
+  language: string = "English",
 ): Promise<string> {
-  const system = `You are a professional, highly organized AI assistant.\nYour goal is to summarize and explain the information provided in the CONTEXT below in a very clear, structured, and professional manner.\nCRITICAL FORMATTING RULES:\n- Use Markdown bullet points (-) whenever listing multiple items, features, or steps.\n- Use **bold text** to highlight key terms, headings, or important concepts (e.g., **Methodology:**, **Scope:**).\n- Keep it highly readable and visually broken up.\nAnswer ONLY using the CONTEXT below, which is automatically retrieved from the uploaded documents.\nIf the context does not contain the answer, politely state that the information is not available in the database — never invent facts, numbers, or dates.\nDO NOT include any inline citations or source references in your text (e.g., do not write "(Source: SDD)"). The sources are already displayed separately in the UI.\n\nCONTEXT:\n${contextBlock}`;
+  const system = `You are a professional, highly organized AI assistant.\nYour goal is to summarize and explain the information provided in the CONTEXT below in a very clear, structured, and professional manner.\nCRITICAL FORMATTING RULES:\n- Use Markdown bullet points (-) whenever listing multiple items, features, or steps.\n- Use **bold text** to highlight key terms, headings, or important concepts.\n- Keep it highly readable and visually broken up.\n- **YOU MUST ANSWER THE USER IN THE ${language.toUpperCase()} LANGUAGE, REGARDLESS OF THE LANGUAGE OF THE CONTEXT!**\nAnswer ONLY using the CONTEXT below, which is automatically retrieved from the uploaded documents.\nIf the context does not contain the answer, politely state that the information is not available in the database — never invent facts, numbers, or dates.\nDO NOT include any inline citations or source references in your text.\n\nCONTEXT:\n${contextBlock}`;
 
   const res = await fetch(url, {
     method: "POST",

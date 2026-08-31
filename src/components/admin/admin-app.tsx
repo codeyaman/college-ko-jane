@@ -59,7 +59,7 @@ const UPLOAD_STEPS = [
   "Extracting text from file",
   "Chunking into passages",
   "Generating vector embeddings",
-  "Storing in Postgres & re-indexing corpus",
+  "Storing in MongoDB & re-indexing corpus",
 ];
 
 const PILL_PALETTES = [
