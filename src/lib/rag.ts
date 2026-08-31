@@ -64,11 +64,14 @@ export async function answerQuestion(
   const ranked = rankChunks(searchQuestion, retrieved, idf);
   const top = ranked[0];
 
-  // 3. Unknown-question gate: the question must clear BOTH the hybrid score
-  //    and the coverage gate — otherwise we honestly say we don't know.
+  // 3. Unknown-question gate
   if (!top || top.final < ANSWER_THRESHOLD || top.overlap < UNKNOWN_OVERLAP_GATE) {
+    let unknownAns = buildUnknownAnswer(question, await knowledgeTitles());
+    if (language && language.toLowerCase() !== "english") {
+      unknownAns = await translateText(unknownAns, language);
+    }
     return {
-      answer: buildUnknownAnswer(question, await knowledgeTitles()),
+      answer: unknownAns,
       sources: [],
       topScore: top?.final ?? 0,
       unknown: true,
@@ -279,6 +282,7 @@ export async function detectAndTranslateQuery(query: string): Promise<{ language
   const prompt = `You are a translator. Analyze the following text.
 If it is already in English, return exactly: {"language": "English", "englishQuery": "[the exact query]"}.
 If it is in another language (e.g. Hindi, Tamil, Telugu, etc.), translate it to English and return exactly: {"language": "[Detected Language Name]", "englishQuery": "[English Translation]"}.
+IMPORTANT: You MUST use formal, literal academic terminology in the English translation to maximize search accuracy. For example, strictly use "admission fee" instead of "joining fee", and "refund" instead of "get back". Keep the translation strictly literal.
 Respond ONLY with valid JSON. Do not include markdown code blocks or any other text.
 Text to translate:
 "${query.replace(/"/g, '\\"')}"`;
@@ -346,4 +350,54 @@ Text to translate:
   }
 
   return { language: "English", englishQuery: query };
+}
+
+async function translateText(text: string, targetLanguage: string): Promise<string> {
+  const prompt = `Translate the following text into ${targetLanguage}. Preserve the tone, formatting, and any bullet points exactly. Do not output anything other than the translation.\n\n${text}`;
+  
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (openRouterKey) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openRouterKey}`,
+        },
+        body: JSON.stringify({
+          model: process.env.OPENROUTER_MODEL ?? "google/gemini-2.0-flash-exp:free",
+          temperature: 0.1,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        if (content) return content;
+      }
+    } catch (err) {}
+  }
+
+  if (geminiKey) {
+    try {
+      const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (content) return content;
+      }
+    } catch (err) {}
+  }
+  
+  return text; // fallback to English
 }
