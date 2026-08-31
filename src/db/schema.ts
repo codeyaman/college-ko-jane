@@ -143,3 +143,19 @@ const messageSchema = new Schema<IMessage>({
   createdAt: { type: Date, default: Date.now },
 });
 export const Message = mongoose.models.Message || mongoose.model<IMessage>("Message", messageSchema);
+
+export interface IFAQ extends Document {
+  question: string;
+  answer: string;
+  category: string;
+  documentId: mongoose.Types.ObjectId;
+  createdAt: Date;
+}
+const faqSchema = new Schema<IFAQ>({
+  question: { type: String, required: true },
+  answer: { type: String, required: true },
+  category: { type: String, required: true, index: true },
+  documentId: { type: Schema.Types.ObjectId, ref: "Doc", required: true, index: true },
+  createdAt: { type: Date, default: Date.now },
+});
+export const FAQ = mongoose.models.FAQ || mongoose.model<IFAQ>("FAQ", faqSchema);

@@ -5,8 +5,8 @@
  */
 
 import { db } from "@/db";
-import { generateDocumentSummary } from "./rag";
-import { Chunk, Doc, KbStats } from "@/db/schema";
+import { generateDocumentSummary, generateFAQsFromDocument } from "./rag";
+import { Chunk, Doc, KbStats, FAQ } from "@/db/schema";
 import { chunkText, normalizeText } from "./chunk";
 import { embed, termSetOf, type IdfLookup } from "./embed";
 
@@ -115,6 +115,22 @@ export async function ingestDocument(input: {
     uploadedBy: input.uploadedBy || null,
   });
 
+  try {
+    const faqs = await generateFAQsFromDocument(content);
+    if (faqs.length > 0) {
+      await FAQ.insertMany(
+        faqs.map((f) => ({
+          question: f.question,
+          answer: f.answer,
+          category: input.category,
+          documentId: doc._id,
+        }))
+      );
+    }
+  } catch (err) {
+    console.warn("FAQ generation failed during ingestion:", err);
+  }
+
   const chunkDocs = parts.map((c) => ({
     documentId: doc._id,
     chunkIndex: c.index,
@@ -137,6 +153,7 @@ export async function deleteDocument(documentId: string): Promise<boolean> {
   if (!deleted) return false;
   
   await Chunk.deleteMany({ documentId });
+  await FAQ.deleteMany({ documentId });
   await reembedCorpus();
   
   return true;

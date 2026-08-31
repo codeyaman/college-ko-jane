@@ -401,3 +401,74 @@ async function translateText(text: string, targetLanguage: string): Promise<stri
   
   return text; // fallback to English
 }
+
+export async function generateFAQsFromDocument(text: string): Promise<Array<{ question: string; answer: string }>> {
+  const prompt = `You are a helpful academic AI assistant. Generate 3 to 5 frequently asked questions (FAQs) and their answers based strictly on the following document text.
+The questions should be natural and conversational (e.g., "What is the fee structure?").
+The answers must be concise, accurate, and drawn ONLY from the provided text.
+Respond ONLY with a valid JSON array of objects, where each object has a "question" and an "answer" field. Do not include any other text or markdown block formatting.
+Document Text:
+${text.slice(0, 8000)}`;
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (openRouterKey) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openRouterKey}`,
+        },
+        body: JSON.stringify({
+          model: process.env.OPENROUTER_MODEL ?? "google/gemini-2.0-flash-exp:free",
+          temperature: 0.2,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        if (content) {
+          try {
+            return JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+          } catch (e) {
+            console.error("Failed to parse FAQ JSON from OpenRouter:", content);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[FAQ Generator] OpenRouter failed.", err);
+    }
+  }
+
+  if (geminiKey) {
+    try {
+      const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (content) {
+          try {
+            return JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+          } catch (e) {
+            console.error("Failed to parse FAQ JSON from Gemini:", content);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[FAQ Generator] Gemini failed.", err);
+    }
+  }
+
+  return [];
+}

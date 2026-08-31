@@ -34,6 +34,7 @@ import {
   MicOff,
   Volume2,
   VolumeX,
+  HelpCircle,
 } from "lucide-react";
 import { auth as firebaseAuth } from "@/lib/firebase-client";
 import { signOut } from "firebase/auth";
@@ -700,6 +701,13 @@ export default function ChatApp({
           <Plus className="h-4 w-4" />
           New chat
         </button>
+        <Link
+          href="/faqs"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-ink-700 bg-ink-850 py-2 text-sm font-medium text-ink-300 transition hover:border-ink-600 hover:text-cream-100 hover:bg-ink-800"
+        >
+          <HelpCircle className="h-4 w-4" />
+          View FAQs
+        </Link>
       </div>
 
       <div className="scroll-slim mt-4 flex-1 space-y-1 overflow-y-auto px-3 pb-4">
