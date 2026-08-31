@@ -42,7 +42,7 @@ import type {
 } from "@/lib/types";
 import { Markdown } from "./markdown";
 import ThemeToggle from "@/components/theme-toggle";
-import { CATEGORIES, LANGUAGES } from "@/lib/constants";
+import { CATEGORIES } from "@/lib/constants";
 
 const DEFAULT_SUGGESTIONS = [
   "What is the B.Tech fee structure?",
@@ -259,7 +259,6 @@ export default function ChatApp({
   const [messages, setMessages] = useState<ChatMessageVM[]>([]);
   const [draft, setDraft] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [sending, setSending] = useState(false);
   const [loadingThread, setLoadingThread] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -416,7 +415,6 @@ export default function ChatApp({
           message: content,
           conversationId: activeId ?? undefined,
           category: selectedCategory || undefined,
-          language: selectedLanguage,
         }),
       });
       if (res.status === 401) {
@@ -874,54 +872,33 @@ export default function ChatApp({
 
         {/* composer */}
         <div className="shrink-0 border-t border-ink-800 bg-ink-950/90 px-4 py-3.5 backdrop-blur">
-          {/* Category & Language selectors */}
-          <div className="mx-auto max-w-3xl mb-3 flex flex-wrap gap-x-4 gap-y-2 px-1">
-            <div className="flex flex-wrap gap-1.5 items-center">
-              <span className="text-[10px] uppercase font-bold text-ink-500 tracking-wider">Dept</span>
+          {/* Category selector */}
+          <div className="mx-auto max-w-3xl mb-3 flex flex-wrap gap-1.5 px-1">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("")}
+              className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
+                selectedCategory === ""
+                  ? "bg-ink-700 text-cream-50"
+                  : "bg-ink-800/50 text-ink-400 hover:bg-ink-800 hover:text-cream-100"
+              }`}
+            >
+              All Departments
+            </button>
+            {CATEGORIES.map((cat) => (
               <button
                 type="button"
-                onClick={() => setSelectedCategory("")}
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
                 className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
-                  selectedCategory === ""
-                    ? "bg-ink-700 text-cream-50"
+                  selectedCategory === cat
+                    ? "bg-saffron-500/20 text-saffron-300"
                     : "bg-ink-800/50 text-ink-400 hover:bg-ink-800 hover:text-cream-100"
                 }`}
               >
-                All
+                {cat}
               </button>
-              {CATEGORIES.map((cat) => (
-                <button
-                  type="button"
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
-                    selectedCategory === cat
-                      ? "bg-saffron-500/20 text-saffron-300"
-                      : "bg-ink-800/50 text-ink-400 hover:bg-ink-800 hover:text-cream-100"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 items-center">
-              <span className="text-[10px] uppercase font-bold text-ink-500 tracking-wider">Lang</span>
-              {LANGUAGES.map((lang) => (
-                <button
-                  type="button"
-                  key={lang}
-                  onClick={() => setSelectedLanguage(lang)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
-                    selectedLanguage === lang
-                      ? "bg-leaf-500/20 text-leaf-300 border border-leaf-500/30"
-                      : "bg-ink-800/50 text-ink-400 hover:bg-ink-800 hover:text-cream-100"
-                  }`}
-                >
-                  {lang}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
           <form

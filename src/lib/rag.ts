@@ -47,12 +47,15 @@ async function knowledgeTitles(): Promise<string[]> {
 export async function answerQuestion(
   question: string,
   history: RagHistoryTurn[] = [],
-  options?: { category?: string; language?: string }
+  options?: { category?: string }
 ): Promise<RagResult> {
   const idf = await getIdfLookup();
   
+  // 1. Auto-detect language and translate to English
+  const { language, englishQuery } = await detectAndTranslateQuery(question);
+  
   // Query Expansion: Prepend the category to force the vector search to rank these chunks higher
-  const searchQuestion = options?.category ? `${options.category} ${question}` : question;
+  const searchQuestion = options?.category ? `${options.category} ${englishQuery}` : englishQuery;
   const queryEmbedding = embed(searchQuestion, idf);
 
   // 1. Vector search → 2. hybrid re-rank (cosine + IDF term-overlap).
@@ -77,7 +80,7 @@ export async function answerQuestion(
     .filter((c) => c.final >= CONTEXT_MIN && c.overlap > 0)
     .slice(0, 8);
 
-  const answer = await generateAnswerFallback(question, context, history, options?.language);
+  const answer = await generateAnswerFallback(question, context, history, language);
 
   return {
     answer,
@@ -270,4 +273,77 @@ export async function generateDocumentSummary(text: string): Promise<string | un
   }
 
   return undefined;
+}
+
+export async function detectAndTranslateQuery(query: string): Promise<{ language: string; englishQuery: string }> {
+  const prompt = `You are a translator. Analyze the following text.
+If it is already in English, return exactly: {"language": "English", "englishQuery": "[the exact query]"}.
+If it is in another language (e.g. Hindi, Tamil, Telugu, etc.), translate it to English and return exactly: {"language": "[Detected Language Name]", "englishQuery": "[English Translation]"}.
+Respond ONLY with valid JSON. Do not include markdown code blocks or any other text.
+Text to translate:
+"${query.replace(/"/g, '\\"')}"`;
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY;
+  const geminiKey = process.env.GEMINI_API_KEY;
+
+  if (openRouterKey) {
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openRouterKey}`,
+        },
+        body: JSON.stringify({
+          model: process.env.OPENROUTER_MODEL ?? "google/gemini-2.0-flash-exp:free",
+          temperature: 0.1,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.choices?.[0]?.message?.content?.trim();
+        if (content) {
+          try {
+            const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+            return { language: parsed.language || "English", englishQuery: parsed.englishQuery || query };
+          } catch (e) {
+            console.error("Failed to parse translation JSON:", content);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[Translator] OpenRouter failed, falling back to Gemini.", err);
+    }
+  }
+
+  if (geminiKey) {
+    try {
+      const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const content = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (content) {
+          try {
+            const parsed = JSON.parse(content.replace(/```json/g, "").replace(/```/g, "").trim());
+            return { language: parsed.language || "English", englishQuery: parsed.englishQuery || query };
+          } catch (e) {
+            console.error("Failed to parse translation JSON from Gemini:", content);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("[Translator] Gemini failed.", err);
+    }
+  }
+
+  return { language: "English", englishQuery: query };
 }
