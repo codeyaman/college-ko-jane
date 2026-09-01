@@ -103,6 +103,18 @@ export async function ingestDocument(input: {
     console.warn("Summary generation failed during ingestion:", err);
   }
 
+  // Version management: check for an existing document with the same title
+  const existingDoc = await Doc.findOne({
+    title: input.title,
+    category: input.category,
+  });
+
+  let version = 1;
+  if (existingDoc) {
+    version = (existingDoc.version || 1) + 1;
+    await deleteDocument(existingDoc._id.toString());
+  }
+
   const doc = await Doc.create({
     title: input.title,
     category: input.category,
@@ -111,6 +123,7 @@ export async function ingestDocument(input: {
     contentText: content,
     chunkCount: parts.length,
     summary,
+    version,
     status: "ready",
     uploadedBy: input.uploadedBy || null,
   });

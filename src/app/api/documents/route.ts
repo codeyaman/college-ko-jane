@@ -27,6 +27,7 @@ export async function GET() {
       mimeType: d.mimeType,
       chunkCount: d.chunkCount,
       summary: d.summary,
+      version: d.version || 1,
       status: d.status,
       createdAt: d.createdAt,
       size: d.contentText.length,

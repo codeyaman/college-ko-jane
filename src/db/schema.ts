@@ -61,6 +61,7 @@ export interface IDoc extends Document {
   chunkCount: number;
   status: IDocumentStatus;
   summary?: string;
+  version: number;
   uploadedBy: mongoose.Types.ObjectId | null;
   createdAt: Date;
 }
@@ -73,6 +74,7 @@ const documentSchema = new Schema<IDoc>({
   chunkCount: { type: Number, default: 0 },
   status: { type: String, enum: DocumentStatus, default: "ready" },
   summary: { type: String },
+  version: { type: Number, default: 1 },
   uploadedBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
   createdAt: { type: Date, default: Date.now },
 });

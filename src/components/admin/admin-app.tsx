@@ -40,6 +40,7 @@ interface DocRow {
   chunkCount: number;
   status: "processing" | "ready" | "failed";
   summary?: string;
+  version?: number;
   createdAt: string;
   size: number;
 }
@@ -610,6 +611,11 @@ export default function AdminApp({
                           <p className="truncate text-sm font-medium text-cream-100">
                             {d.title}
                           </p>
+                          {d.version && d.version > 1 && (
+                            <span className="shrink-0 rounded-full border border-saffron-500/40 bg-saffron-500/10 px-2 py-0.5 text-[10px] font-semibold text-saffron-300">
+                              v{d.version}
+                            </span>
+                          )}
                           <span
                             className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] ${pillClass(d.category)}`}
                           >

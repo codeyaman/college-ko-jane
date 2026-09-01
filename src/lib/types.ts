@@ -8,6 +8,14 @@ export interface SourceRef {
   snippet: string;
 }
 
+export interface DocVM {
+  chunkCount: number;
+  summary?: string;
+  version?: number;
+  status: "processing" | "ready" | "failed";
+  createdAt: string;
+}
+
 export interface ChatMessageVM {
   id: string;
   role: "user" | "assistant";
