@@ -1,10 +1,10 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/codeyaman/college-ko-jane/main/src/app/icon.svg" alt="College Ko Jano Logo" width="120" height="120" />
 
-  <h1>🎓 College Ko Jano — कॉलेज को जानो</h1>
+  <h1>🎓 College Ko Jano — Enterprise AI Campus Assistant</h1>
 
   <p>
-    <strong>A highly-performant, RAG-based College Assistant built for the modern student.</strong>
+    <strong>A next-generation, high-performance Knowledge Studio engineered to transform how students interact with campus data.</strong>
   </p>
 
   <p>
@@ -14,56 +14,63 @@
     <img src="https://img.shields.io/badge/TailwindCSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss" alt="Tailwind CSS" />
   </p>
 
-  <p>Students ask questions in plain English. The assistant instantly retrieves passages from officially uploaded college documents, generates a strictly grounded answer, and cites its sources. No hallucinations—if it doesn't know, it says so.</p>
+  <p>Students interact in plain English or their native language. The AI instantly retrieves context from officially uploaded documents, generates strictly grounded responses, and clearly cites its sources. Zero hallucinations—if it isn't in the knowledge base, it won't be in the answer.</p>
 </div>
 
 ---
 
-## ✨ Features That Stand Out
+## ✨ Enterprise-Grade Features
 
-- 💬 **Intelligent Chat Interface** — NDJSON streaming responses, typewriter effect, suggestion chips, and per-message confidence badges.
-- 📚 **Dynamic RAG Pipeline** — Retrieve → Hybrid Re-Rank → Confidence Gate → Grounded Generate.
-- 🔐 **Secure Role-based Auth** — Seamless Firebase Authentication integrated securely via Server-Side Admin SDK.
-- 🗂️ **Knowledge Studio (Admin)** — Drag-and-drop file upload, automatic text extraction, overlap-aware chunking, and instant TF-IDF embedding.
+- 💬 **Dynamic Chat Interface** — NDJSON streaming responses, interactive suggestion chips, typing indicators, and per-message confidence badges.
+- 🗣️ **Native Voice Intelligence** — Speak your questions via the built-in Microphone (Speech-to-Text) and listen to answers via the Speaker (Text-to-Speech) using high-performance, native Web Speech APIs—zero external bloat.
+- 🌍 **Multilingual Translation Layer** — Ask questions in Hindi, Tamil, Telugu, or any native language. The AI seamlessly translates to English for highly precise Vector Search, then translates the answer back to your native language!
+- 🗂️ **Knowledge Studio (Admin)** — Drag-and-drop document upload, automated chunking, and instant TF-IDF embedding. 
+- 🔄 **Document Version Management** — Upload an updated file and the system intelligently increments the version (e.g., `v2`), purges outdated vector chunks, and synchronizes the knowledge base automatically.
+- 🤖 **Auto-Generated FAQs Engine** — The system autonomously reads newly uploaded documents, extracts the most critical information, and generates conversational FAQs to populate a dedicated dashboard.
+- 📊 **Feedback & Analytics** — Interactive thumbs up/down (👍/👎) system seamlessly integrated into an Admin Analytics dashboard to track AI performance and student satisfaction.
 - 🔍 **In-DB Vector Search** — Top-K cosine similarity ranking executed entirely inside MongoDB Atlas Vector Search.
-- 🚀 **Lightning Fast** — Built on Next.js App Router and optimized for maximum speed and SEO.
 
 ## 🛠 Tech Stack
 
-| Category | Technologies |
+| Layer | Technologies |
 | --- | --- |
 | **Frontend** | Next.js (App Router), React 19, Tailwind CSS v4, Framer Motion, Lucide Icons |
-| **Backend** | Next.js Route Handlers (Node.js runtime) |
-| **Database** | MongoDB Atlas, Drizzle ORM |
-| **Vector Engine** | MongoDB Atlas Vector Search |
+| **Backend** | Next.js Route Handlers (Node.js runtime), Vercel AI SDK |
+| **Database** | MongoDB Atlas, Mongoose ORM |
+| **Retrieval Engine** | Custom RAG Pipeline, MongoDB Atlas Vector Search |
 | **Embeddings** | Deterministic local TF-IDF feature hashing (1024-dim) |
 | **Authentication** | Firebase Client & Admin SDK, Secure HTTP-only Sessions |
 
 ## 🚀 Quick Start Guide
 
-Want to run **College Ko Jano** locally? It only takes a few minutes!
+Deploy the **College Ko Jano** enterprise environment locally in under 5 minutes.
 
 ### Prerequisites
 - Node.js (v18+)
-- MongoDB Atlas Database
-- Firebase Project
+- MongoDB Atlas Database URI
+- Firebase Project Configurations
+- OpenRouter or Google Gemini API Key
 
-### 1. Clone the repository
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/codeyaman/college-ko-jane.git
 cd college-ko-jane
 ```
 
-### 2. Install dependencies
+### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 3. Environment Setup
-Create a `.env` file in the root directory and add the following keys:
+### 3. Environment Configuration
+Create a `.env` file in the root directory and securely add the following keys:
 ```env
 # Database
 DATABASE_URL="mongodb+srv://user:password@cluster.mongodb.net/db"
+
+# LLM Providers (Provide at least one)
+GEMINI_API_KEY="your-gemini-key"
+OPENROUTER_API_KEY="your-openrouter-key"
 
 # Firebase Client
 NEXT_PUBLIC_FIREBASE_API_KEY="your-api-key"
@@ -80,44 +87,46 @@ FIREBASE_CLIENT_EMAIL="your-client-email"
 FIREBASE_PRIVATE_KEY="your-private-key"
 ```
 
-### 4. Push Database Schema & Seed Data
+### 4. Initialize the Knowledge Base
+*(Optional: Run the seeder to populate the demo corpus for Vidya Vihar Institute of Technology and create demo user accounts).*
 ```bash
-npx drizzle-kit push
 npx tsx src/db/seed.ts
 ```
-*(The seed script automatically generates a demo corpus for Vidya Vihar Institute of Technology and creates demo student/admin accounts).*
 
-### 5. Run the Application
+### 5. Launch the Application
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser!
+Access the Knowledge Studio at [http://localhost:3000](http://localhost:3000)!
 
 ---
 
-## 🏗 System Architecture
+## 🏗 Architecture & Data Flow
 
-The core of College Ko Jano is its blazing fast RAG (Retrieval-Augmented Generation) pipeline:
+The core of College Ko Jano is its highly optimized, hallucination-resistant RAG (Retrieval-Augmented Generation) pipeline:
 
 ```mermaid
-graph LR
-    Q[User Question] --> E[Embed Vector]
-    E --> DB[(MongoDB Vector Search)]
+graph TD
+    User([Student]) -->|Multilingual/Voice Query| UI[Chat Interface]
+    UI --> Translate[Auto-Translation Layer]
+    Translate -->|English| E[Vector Embedding]
+    E --> DB[(MongoDB Atlas Vector Search)]
     DB --> R[Hybrid Re-ranker]
     R --> G{Confidence Gate}
     G -- High Confidence --> Gen[Grounded Generation]
-    G -- Low Confidence --> U[Unknown/Fallback]
-    Gen --> A[Answer + Cited Sources]
+    G -- Low Confidence --> U[Unknown/Fallback Handler]
+    Gen --> TransOut[Translate back to Native Language]
+    TransOut --> UI
 ```
 
 ## 🔐 Security & Privacy First
 
-- **Zero Secrets Leaked:** No environment variables or API keys are ever bundled into the client.
-- **SQL-Injection Safe:** Drizzle ORM strictly parameterizes all database queries.
-- **Safe Authentication:** Firebase Admin handles token verification server-side; passwords are never sent in plain text.
+- **Zero Secrets Leaked:** Environment variables and API keys are strictly confined to the server environment.
+- **Robust Database Integrity:** Mongoose schemas enforce rigorous data validation and parameterization.
+- **Enterprise Authentication:** Firebase Admin handles JWT token verification entirely server-side; highly secure HTTP-only cookies manage session persistence.
 
 ---
 
 <div align="center">
-  <p>Built with 💛 by <a href="https://github.com/codeyaman">codeyaman</a></p>
+  <p>Engineered with 💛 by <a href="https://github.com/codeyaman">codeyaman</a></p>
 </div>
