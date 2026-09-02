@@ -384,7 +384,7 @@ export default function AdminApp({
               Teach the assistant
             </h2>
             <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
-              Upload college documents (.pdf, .txt, .md). They are chunked,
+              Upload college documents (.pdf, .txt, .md, .csv, images). They are chunked,
               embedded into 1024-dim vectors and stored in Postgres — ready to
               be cited within seconds.
             </p>
@@ -409,7 +409,7 @@ export default function AdminApp({
               <input
                 ref={inputRef}
                 type="file"
-                accept=".pdf,.txt,.md"
+                accept=".pdf,.txt,.md,.csv,.png,.jpg,.jpeg,.webp"
                 className="hidden"
                 onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
               />
@@ -444,7 +444,7 @@ export default function AdminApp({
                     </span>
                   </p>
                   <p className="mt-1 text-xs text-ink-500">
-                    PDF, TXT or MD · up to 10 MB
+                    PDF, TXT, MD, CSV, or Images · up to 10 MB
                   </p>
                 </>
               )}
