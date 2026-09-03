@@ -482,7 +482,7 @@ export default function ChatApp({
     timer = setInterval(tick, 24);
   }
 
-  async function send(rawText?: string) {
+  async function send(rawText?: string, overrideCategory?: string) {
     const content = (rawText ?? draft).trim();
     if (!content || sending) return;
     setDraft("");
@@ -509,7 +509,7 @@ export default function ChatApp({
         body: JSON.stringify({
           message: content,
           conversationId: activeId ?? undefined,
-          category: selectedCategory || undefined,
+          category: (overrideCategory ?? selectedCategory) || undefined,
         }),
       });
       if (res.status === 401) {
@@ -997,7 +997,13 @@ export default function ChatApp({
               <button
                 type="button"
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  // If chat is empty and nothing is typed, auto-query the category!
+                  if (messages.length === 0 && !draft.trim()) {
+                    send(`Tell me about the ${cat} department, including any fee structures, rules, or general information.`, cat);
+                  }
+                }}
                 className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
                   selectedCategory === cat
                     ? "bg-saffron-500/20 text-saffron-300"
